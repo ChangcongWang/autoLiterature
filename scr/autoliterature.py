@@ -5,15 +5,13 @@ import re
 import time 
 
 from modules import folderMoniter, patternRecognizer, metaExtracter
-from modules import urlDownload, dropboxInteractor, note_modified
+from modules import urlDownload, note_modified
 
 
 def set_args():
     parser = argparse.ArgumentParser(description="AutoLiterature")
     parser.add_argument('-p', '--root_path', type=str, default=None,
                         help="The path to the folder.")
-    parser.add_argument('-k', '--dropbox_access_token', type=str, default=None,
-                        help='https://www.dropbox.com/developers/documentation/python#tutorial')
     parser.add_argument('-t', '--interval_time', type=int, default=1, 
                         help='The interval time for monitoring folder.')
     args = parser.parse_args()
@@ -25,19 +23,17 @@ def main():
     args = set_args()
     root_path = args.root_path 
     interval_time = args.interval_time
-    dropbox_access_token = args.dropbox_access_token
 
     # init 
     folder_moniter = folderMoniter(root_path)
     pattern_recog = patternRecognizer(r'- \[.*\]')  # 检测 - [DOI], 或者- [arxivId]
     meta_extracter = metaExtracter()
     url_download = urlDownload()
-    dbx = dropboxInteractor(dropbox_access_token)
 
     while True:
         modified_items = folder_moniter.file_md5_update()
         for md_file, md_md5 in modified_items.items():
-            with open(md_file, 'r') as f:
+            with open(md_file, 'r',encoding = "utf-8") as f:
                 content = f.read()
             
             m = pattern_recog.findall(content)
@@ -50,7 +46,7 @@ def main():
                     # Fetch data
                     try:
                         bib_dict = meta_extracter.id2bib(literature_id)
-                        # print(bib_dict)
+                        print(bib_dict)
                         if "pdf_link" in bib_dict.keys():
                             pdf_dict = url_download.fetch(bib_dict["pdf_link"])
                             if not pdf_dict:
@@ -63,26 +59,29 @@ def main():
                             bib_dict["title"] = re.sub(r' *\n *', ' ', bib_dict["title"])
                             
                         pdf_name = bib_dict['year'] + '_' + bib_dict['title'] + '.pdf'
+                        pdf_name=pdf_name.replace(" ","_")
+                        pdf_loc = os.path.join(os.path.dirname(root_path),"pdf",pdf_name)
+                        pdf_loc=pdf_loc.replace("\\","/")
                         if pdf_dict:
-                            dbx.files_upload(pdf_dict['pdf'], '/pdf/'+pdf_name)
-                            pdf_shared_link = dbx.generate_shared_url('/pdf/'+pdf_name)
-                        else:
-                            pdf_shared_link = "Please manually add the attachment link."
+                            with open(pdf_loc, 'wb') as pdf:
+                                pdf.write(pdf_dict['pdf'])
+
+                        pdf_shared_link = "../pdf/"+pdf_name
 
                         if 'cited_count' in bib_dict.keys():
-                            replaced_literature = "- **{}**. {} et.al. **{}**, **{}**, ([pdf]({}))([link]({})), (Citations **{}**).".format(
+                            replaced_literature = "|**{}**| {} et.al| {}| {}| ([pdf]({}))([link]({}))|{}|||".format(
                                 bib_dict['title'], bib_dict["author"].split(" and ")[0], bib_dict['journal'], 
                                 bib_dict['year'], pdf_shared_link, bib_dict['url'], bib_dict["cited_count"]
                                 )
                         else:
-                            replaced_literature = "- **{}**. {} et.al. **{}**, **{}**, ([pdf]({}))([link]({})).".format(
+                            replaced_literature = "|**{}**| {} et.al| {}| {}| ([pdf]({}))([link]({}))| |||".format(
                                 bib_dict['title'], bib_dict["author"].split(" and ")[0], bib_dict['journal'], 
                                 bib_dict['year'], pdf_shared_link, bib_dict['url']
                                 )
 
                         replace_dict[literature] = replaced_literature
                     except:
-                        print("")
+                        print("ex")
                         # replace_dict[literature] = literature
 
                 # Modified note

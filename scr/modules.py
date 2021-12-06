@@ -15,8 +15,6 @@ from unidecode import unidecode
 import requests 
 from bs4 import BeautifulSoup 
 # import bibtexparser
-from retrying import retry
-import dropbox
 
 
 # log config
@@ -49,7 +47,7 @@ class folderMoniter(object):
 
         modified_items = dict()
         for file_path, md5_before in self.file_md5.items():
-            md5_now = hashlib.md5(open(file_path).read().encode('utf-8')).hexdigest()
+            md5_now = hashlib.md5(open(file_path,encoding = "utf-8").read().encode('utf-8')).hexdigest()
             if md5_now != md5_before:
                 self.file_md5[file_path] = md5_now
                 modified_items[file_path] = md5_now
@@ -215,7 +213,7 @@ class urlDownload(object):
         res = requests.get('https://lovescihub.wordpress.com/')
         s = self._get_soup(res.content)
         for a in s.find_all('a', href=True):
-            if 'sci-hub.' in a['href']:
+            if 'sci-hub.se' in a['href']:
                 urls.append(a['href'])
         return urls
 
@@ -343,65 +341,13 @@ class urlDownload(object):
         return BeautifulSoup(html, 'html.parser')
 
 
-class dropboxInteractor(object):
-    def __init__(self, access_token):
-        self.dbx = dropbox.Dropbox(access_token)
-
-    def files_upload(self, file_, file_path, mode=dropbox.files.WriteMode.overwrite):
-        self.dbx.files_upload(file_, file_path, mode=dropbox.files.WriteMode.overwrite)
-
-    def generate_shared_url(self, file_path):
-        shared_path = self.dbx.sharing_create_shared_link(file_path).url
-        # shared_path = self.dbx.sharing_get_file_metadata(file_path).preview_url
-        # shared_path = parse.unquote(shared_path)
-
-        return shared_path
-
-    def sharedlinks_files_list_folder(self, path):
-        sharedlinks_files_dict = {}
-        for entry in self.dbx.files_list_folder(path).entries:
-            entry_path = entry.path_display
-            # entry_shared_link = self.dbx.sharing_get_file_metadata(entry_path).preview_url
-            entry_shared_link = self.dbx.sharing_create_shared_link(entry_path).url
-            entry_shared_link = parse.unquote(entry_shared_link)
-            
-            sharedlinks_files_dict[entry_shared_link] = entry_path
-
-        return sharedlinks_files_dict
-
-    def del_file(self, path):
-        self.dbx.files_delete_v2(path)
-
-
 def note_modified(pattern_recog, md_file, **replace_dict):
-    with open(md_file, 'r') as f:
+    with open(md_file, 'r',encoding = "utf-8") as f:
         content = f.read()
     
     replaced_content = pattern_recog.multiple_replace(content, **replace_dict)
 
-    with open(md_file, 'w') as f:
+    with open(md_file, 'w',encoding = "utf-8") as f:
         f.write(''.join(replaced_content))
 
-
-class attachRemove(object):
-    def __init__(self, md_file, attach_path, dbx):
-        self.files_sharedlinks_dict = dbx.sharedlinks_files_list_folder(attach_path)
-        self.md_file = md_file
-        self.dbx = dbx 
-
-    def _pattern(self, pattern):
-        return re.compile(pattern)
-
-    def _removed_attachments(self, pattern):
-        with open(self.md_file, 'r') as f:
-            string = f.read()
-
-        pattern_rec = self._pattern(pattern)
-        
-        m = pattern_rec.findall(string)
-
-        removed_attachments = list(set(self.files_sharedlinks_dict.keys() - set(m)))
-
-        for attach in removed_attachments:
-            self.dbx.del_file(attach)
 

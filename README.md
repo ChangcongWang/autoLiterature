@@ -1,4 +1,5 @@
 # autoLiterature
+相比原程序将上传至Dropbox的部分删除，仅保留为下载器
 **autoLiterature**是一个基于Dropbox和Python的自动文献管理器。Inspired by [Mu Li](https://www.bilibili.com/video/BV1nA41157y4). 
 
 ![一个动图](doc/top.gif)
@@ -63,7 +64,7 @@ optional arguments:
 2. 选择一个存放**文献笔记**的文件夹作为程序监视对象，比如`./note`, 选择监控频率`t s/epoch`.
 3. 运行程序
     ```
-    python main.py -p ./note -k your_access_token -t 1
+    python main.py -p ./note -t 1
     ```
     后台运行
     ```

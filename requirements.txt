@@ -1,8 +1,4 @@
 beautifulsoup4
-dropbox
 requests
-retrying
-html5lib
 feedparser
 unidecode
-bibtexparser
