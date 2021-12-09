@@ -59,7 +59,7 @@ def main():
                             bib_dict["title"] = re.sub(r' *\n *', ' ', bib_dict["title"])
                             
                         pdf_name = bib_dict['year'] + '_' + bib_dict['title'] + '.pdf'
-                        pdf_name=pdf_name.replace(" ","_")
+                        pdf_name=pdf_name.replace(" ","_").replace(":","").replace("/","").replace("\"","").replace("<","").replace(">","").replace("|","").replace("*","").replace("?","")
                         pdf_loc = os.path.join(os.path.dirname(root_path),"pdf",pdf_name)
                         pdf_loc=pdf_loc.replace("\\","/")
                         if pdf_dict:
@@ -69,12 +69,12 @@ def main():
                         pdf_shared_link = "../pdf/"+pdf_name
 
                         if 'cited_count' in bib_dict.keys():
-                            replaced_literature = "|**{}**| {} et.al| {}| {}| ([pdf]({}))([link]({}))|{}|||".format(
+                            replaced_literature = "|**{}**| {} et.al| {}| {}| ([pdf]({}))([link]({}))|{}||||".format(
                                 bib_dict['title'], bib_dict["author"].split(" and ")[0], bib_dict['journal'], 
                                 bib_dict['year'], pdf_shared_link, bib_dict['url'], bib_dict["cited_count"]
                                 )
                         else:
-                            replaced_literature = "|**{}**| {} et.al| {}| {}| ([pdf]({}))([link]({}))| |||".format(
+                            replaced_literature = "|**{}**| {} et.al| {}| {}| ([pdf]({}))([link]({}))| ||||".format(
                                 bib_dict['title'], bib_dict["author"].split(" and ")[0], bib_dict['journal'], 
                                 bib_dict['year'], pdf_shared_link, bib_dict['url']
                                 )
