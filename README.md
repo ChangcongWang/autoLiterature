@@ -1,5 +1,8 @@
 # autoLiterature
-相比原程序将上传至Dropbox的部分删除，仅保留为下载器
+相比原程序将上传至Dropbox的部分删除，仅保留为本地下载器，并修改md文件表示为表格形式  
+![image](https://user-images.githubusercontent.com/46935962/150793901-9b8a008b-b991-478c-8c46-5b4e21deb9b7.png)
+
+---
 **autoLiterature**是一个基于Dropbox和Python的自动文献管理器。Inspired by [Mu Li](https://www.bilibili.com/video/BV1nA41157y4). 
 
 ![一个动图](doc/top.gif)
